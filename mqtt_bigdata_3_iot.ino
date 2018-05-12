@@ -8,6 +8,8 @@ const char* password = "12348765";
 WiFiClient CLIENT;
 PubSubClient MQTT(CLIENT);
 
+unsigned long lastTime = 0;
+
 void setup() {
   Serial.begin(9600);
   pinMode(2, OUTPUT);
@@ -55,4 +57,11 @@ void reconnect() {
 void loop() {
   reconnect();
   MQTT.loop(); 
+  unsigned long time = millis() - lastTime;
+  if(time > 2000){
+    MQTT.publish("python/test", "do iot...");
+    lastTime = millis();  
+  }
+  
+
 }

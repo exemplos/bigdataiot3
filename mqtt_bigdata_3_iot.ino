@@ -10,6 +10,7 @@ PubSubClient MQTT(CLIENT);
 
 void setup() {
   Serial.begin(9600);
+  pinMode(2, OUTPUT);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
@@ -20,9 +21,38 @@ void setup() {
   Serial.println("WiFi connected");  
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+
+  MQTT.setServer("iot.franciscocalaca.com", 1883);
+  MQTT.setCallback(lerMensagem);
+}
+
+void lerMensagem(char* topic, byte* payload, unsigned int length){
+  DynamicJsonBuffer jsonBuffer;
+  String json = (char*)payload;
+  Serial.println(json);
+  JsonObject& rootRead = jsonBuffer.parseObject(json);
+  long number = rootRead["number"];
+  if(number == 1){
+    digitalWrite(2, HIGH);
+    Serial.println("...ligar");
+  }else{
+    digitalWrite(2, LOW);
+    Serial.println("...desligar");
+  }  
+}
+
+void reconnect() {
+  while (!MQTT.connected()) {
+    if (MQTT.connect("SENSOR-01")) {
+      MQTT.subscribe("hello/world");
+    } else {
+      Serial.print(".");
+      delay(3000);
+    }
+  }
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+  reconnect();
+  MQTT.loop(); 
 }
